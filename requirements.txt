@@ -1,0 +1,4 @@
+numpy==1.23.5
+schnetpack @ git+https://github.com/Bedledl/schnetpack_ipu.git@min-working
+moleculekit
+torchmd_cg

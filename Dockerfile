@@ -8,5 +8,7 @@ COPY requirements.txt /opt/requirements.txt
 
 RUN pip3 install -r /opt/requirements.txt
 
+RUN cd /opt/ && git clone https://github.com/torchmd/torchmd-net.git
+
 CMD source /opt/poplar/enable.sh && source /opt/popart/enable.sh
 

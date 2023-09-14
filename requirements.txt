@@ -1,4 +1,4 @@
 numpy==1.23.5
-schnetpack @ git+https://github.com/Bedledl/schnetpack_ipu.git@min-working
+schnetpack @ git+https://github.com/Bedledl/schnetpack_ipu.git@min-working-cleaned
 moleculekit
-torchmd_cg
+ase

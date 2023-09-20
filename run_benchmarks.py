@@ -136,7 +136,8 @@ def run_all_benchmarks():
         # that are computed with a cutoff radius
         nl = build_neighbor_list(mol, [schnetpack_model_config["rbf_cutoff"]]*len(mol))
         num_neighbors_cutoff = torch.tensor([len(nl.get_neighbors(i)[0]) - 1 for i in range(len(mol))])
-        num_neighbors = regression_method(num_neighbors_cutoff)
+        num_neighbors = regression_method(num_neighbors_cutoff, dtype=torch.float64)
+        num_neighbors = int(num_neighbors)
 
         # nl contains self-loop -> decrement num_neighbors
         schnetpack_model_config["n_neighbors"] = num_neighbors

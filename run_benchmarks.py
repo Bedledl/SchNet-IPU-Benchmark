@@ -118,7 +118,7 @@ def run_all_benchmarks():
 
     neighbors_regression_method = [torch.mean, torch.max, torch.median]
 
-    speeds = {}
+    log_file = open("bechmark_result.log", "w")
 
     for system, calc_forces, regression_method in product(systems, [True, False], neighbors_regression_method):
         pdb_file, name = system
@@ -163,11 +163,18 @@ def run_all_benchmarks():
 
         try:
             speed = benchmark(model_call, pdb_file)
-            speeds[name] = speed
-            print(f'  {name}: {speed} ms/it     with forces: {calc_forces}')
+            description = f'  {name}: {speed} ms/it     with forces: {calc_forces}' \
+                          f'      k: {num_neighbors}({str(regression_method.__name__)})'
+            print(description)
+            log_file.write(description)
         except Exception as e:
             print(e)
-            print(f'  {name}: failed     with forces: {calc_forces}')
+            description = f'  {name}: failed     with forces: {calc_forces}' \
+                          f'      k: {num_neighbors}({str(regression_method.__name__)})'
+            print(description)
+            log_file.write(description)
+
+    log_file.close()
 
 if __name__ == '__main__':
     run_all_benchmarks()

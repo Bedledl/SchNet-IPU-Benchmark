@@ -134,7 +134,7 @@ def run_all_benchmarks():
 
         # we determine the k for the KNN neighborlist with the max numbers of neighbors with the cutoff,
         # that would've been used by traditional neighborlist computations
-        nl = build_neighbor_list(mol, [schnetpack_model_config["rbf_cutoff"]])
+        nl = build_neighbor_list(mol, [schnetpack_model_config["rbf_cutoff"]]*len(mol))
         max_neighbors = 0
         for i in range(len(mol)):
             max_neighbors = max(max_neighbors, len(nl.get_neighbors(i)[0]))

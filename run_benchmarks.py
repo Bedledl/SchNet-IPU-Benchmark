@@ -11,6 +11,7 @@ from torch.utils.benchmark import Timer
 from create_model import create_model
 
 from ase.io.proteindatabank import read_proteindatabank
+from ase.neighborlist import build_neighbor_list
 
 from schnetpack.md import System
 from schnetpack.ipu_modules.Calculator import BenchmarkCalculator
@@ -131,10 +132,16 @@ def run_all_benchmarks():
         schnetpack_model_config["n_atoms"] = system.n_atoms
         schnetpack_model_config["n_batches"] = 1
 
-        # if molecule contains less atoms than the max_n_neighbor value, limit it to the num_atoms
-        schnetpack_model_config["n_neighbors"] = min(
-            schnetpack_model_config["n_neighbors"], system.n_atoms[0] - 1
-        )
+        # we determine the k for the KNN neighborlist with the max numbers of neighbors with the cutoff,
+        # that would've been used by traditional neighborlist computations
+        nl = build_neighbor_list(mol, [schnetpack_model_config["rbf_cutoff"]])
+        max_neighbors = 0
+        for i in range(len(mol)):
+            max_neighbors = max(max_neighbors, len(nl.get_neighbors(i)[0]))
+
+        # nl contains self-loop -> decrement max_neighbors
+        schnetpack_model_config["n_neighbors"] = max_neighbors - 1
+
         schnetpack_model_config["calc_forces"] = calc_forces
 
         model = create_model(**schnetpack_model_config)

@@ -141,6 +141,7 @@ def run_all_benchmarks():
 
         # nl contains self-loop -> decrement max_neighbors
         schnetpack_model_config["n_neighbors"] = max_neighbors - 1
+        print(f"max_neighbors: {max_neighbors - 1}")
 
         schnetpack_model_config["calc_forces"] = calc_forces
 

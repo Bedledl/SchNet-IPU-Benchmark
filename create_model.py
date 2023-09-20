@@ -2,6 +2,8 @@ import schnetpack as spk
 import schnetpack.transform as trn
 import schnetpack.ipu_modules as schnet_ipu_modules
 
+from torch.nn import Identity
+
 
 def create_model(
         n_atom_basis,
@@ -13,11 +15,15 @@ def create_model(
         rbf_cutoff=5.,
         n_interactions=3,
         constant_batch_size=True,
+        calc_forces=True,
         energy_key="energy",
         forces_key="forces"
 ):
     pred_energy = spk.atomistic.Atomwise(n_in=n_atom_basis, output_key=energy_key)
-    pred_forces = spk.atomistic.Forces(energy_key=energy_key, force_key=forces_key)
+    if calc_forces:
+        pred_forces = spk.atomistic.Forces(energy_key=energy_key, force_key=forces_key)
+    else:
+        pred_forces = Identity()
 
     neighbor_distance = schnet_ipu_modules.KNNNeighborTransform(n_neighbors, n_batches, n_atoms)
 

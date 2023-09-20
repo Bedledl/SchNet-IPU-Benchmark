@@ -1,4 +1,5 @@
 import os
+from itertools import product
 from os.path import join
 from typing import Dict
 
@@ -118,7 +119,9 @@ def run_all_benchmarks():
 
     speeds = {}
 
-    for pdb_file, name in systems:
+    for system, calc_forces in product(systems, [True, False]):
+        pdb_file, name = system
+
         mol = read_proteindatabank(pdb_file, index=0)
 
         system = System()
@@ -154,9 +157,10 @@ def run_all_benchmarks():
         try:
             speed = benchmark(model_call, pdb_file)
             speeds[name] = speed
-            print(f'  {name}: {speed} ms/it')
+            print(f'  {name}: {speed} ms/it     with forces: {calc_forces}')
         except Exception as e:
-            print(f'  {name}: failed')
+            print(e)
+            print(f'  {name}: failed     with forces: {calc_forces}')
 
 if __name__ == '__main__':
     run_all_benchmarks()

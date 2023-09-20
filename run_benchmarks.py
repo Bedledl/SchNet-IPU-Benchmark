@@ -3,9 +3,7 @@ from itertools import product
 from os.path import join
 from typing import Dict
 
-from moleculekit.molecule import Molecule
-from moleculekit.periodictable import periodictable
-import torch as pt
+import torch
 from torch.utils.benchmark import Timer
 
 from create_model import create_model
@@ -118,9 +116,11 @@ def run_all_benchmarks():
                (join(torchmdnet_path, 'factorIX.pdb'), 'FC9'),
                (join(torchmdnet_path, 'stmv.pdb'), 'STMV')]
 
+    neighbors_regression_method = [torch.mean, torch.max, torch.median]
+
     speeds = {}
 
-    for system, calc_forces in product(systems, [True, False]):
+    for system, calc_forces, regression_method in product(systems, [True, False], neighbors_regression_method):
         pdb_file, name = system
 
         mol = read_proteindatabank(pdb_file, index=0)
@@ -132,16 +132,15 @@ def run_all_benchmarks():
         schnetpack_model_config["n_atoms"] = system.n_atoms
         schnetpack_model_config["n_batches"] = 1
 
-        # we determine the k for the KNN neighborlist with the max numbers of neighbors with the cutoff,
-        # that would've been used by traditional neighborlist computations
+        # we determine the k for the KNN neighborlist out of the numbers of neighors
+        # that are computed with a cutoff radius
         nl = build_neighbor_list(mol, [schnetpack_model_config["rbf_cutoff"]]*len(mol))
-        max_neighbors = 0
-        for i in range(len(mol)):
-            max_neighbors = max(max_neighbors, len(nl.get_neighbors(i)[0]))
+        num_neighbors_cutoff = torch.tensor([len(nl.get_neighbors(i)[0]) - 1 for i in range(len(mol))])
+        num_neighbors = regression_method(num_neighbors_cutoff)
 
-        # nl contains self-loop -> decrement max_neighbors
-        schnetpack_model_config["n_neighbors"] = max_neighbors - 1
-        print(f"max_neighbors: {max_neighbors - 1}")
+        # nl contains self-loop -> decrement num_neighbors
+        schnetpack_model_config["n_neighbors"] = num_neighbors
+        print(f"max_neighbors: {num_neighbors - 1}")
 
         schnetpack_model_config["calc_forces"] = calc_forces
 

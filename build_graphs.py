@@ -20,7 +20,7 @@ if not torchmdnet_path:
     raise ValueError("Please set the environment variable 'TORCHMD_NET' to the root directory"
                      " of a cloned version of the torchmd-net repository.")
 
-pdb_file = join(torchmdnet_path, 'alanine_dipeptide.pdb')
+pdb_file = join(torchmdnet_path, 'chignolin.pdb')
 
 mol = read_proteindatabank(pdb_file, index=0)
 

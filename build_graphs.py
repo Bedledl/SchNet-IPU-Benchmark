@@ -31,7 +31,7 @@ system.load_molecules([mol])
 schnetpack_ipu_config = {
         "n_atom_basis": 128,
         "n_rbf": 50,
-        "n_neighbors": 15,
+        "n_neighbors": 32,
         "n_atoms": system.n_atoms,
         "n_batches": 1,
         "rbf_cutoff": 5.0,

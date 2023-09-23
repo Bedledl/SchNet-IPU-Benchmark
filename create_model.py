@@ -25,11 +25,13 @@ def create_model(
     else:
         pred_forces = Identity()
 
-    neighbor_distance = schnet_ipu_modules.KNNNeighborTransform(n_neighbors, n_batches, n_atoms)
+    neighbor_distance = schnet_ipu_modules.KNNNeighborTransform(n_neighbors, n_batches, n_atoms,
+                                                                always_update=True)
 
     pairwise_distance = schnet_ipu_modules.PairwiseDistancesIPU()
 
     radial_basis = schnet_ipu_modules.GaussianRBFIPU(n_rbf=n_rbf, cutoff=rbf_cutoff)
+
     schnet = spk.representation.SchNet(
         n_atom_basis=n_atom_basis, n_interactions=n_interactions,
         radial_basis=radial_basis,

@@ -1,19 +1,9 @@
 import os
-from itertools import product
 from os.path import join
-from typing import Dict
-
-
-import torch
-from torch.utils.benchmark import Timer
-
-from create_model import create_model
 
 from ase.io.proteindatabank import read_proteindatabank
-from ase.neighborlist import build_neighbor_list
 
 from schnetpack.md import System
-from schnetpack.ipu_modules.Calculator import BenchmarkCalculator
 
 torchmdnet_path = join(os.getenv('TORCHMD_NET'), "benchmarks/systems")
 if not torchmdnet_path:
@@ -41,6 +31,9 @@ schnetpack_ipu_config = {
 
 
 def profiling(calculate_forces, report_dir: str):
+    from schnetpack.ipu_modules.Calculator import BenchmarkCalculator
+    from create_model import create_model
+
     os.environ["POPLAR_ENGINE_OPTIONS"] = '{"autoReport.all":"true", "autoReport.directory":"'+report_dir+'"}'
 
     schnetpack_ipu_config["calc_forces"] = calculate_forces
@@ -58,11 +51,59 @@ def profiling(calculate_forces, report_dir: str):
         n_neighbors=schnetpack_ipu_config["n_neighbors"]
     )
 
-    calc.compile_model(system)
+    calc.calculate(system)
 
-    model_call = calc.get_model_call(system)
+    #calc.compile_model(system)
 
-    model_call()
+    #model_call = calc.get_model_call(system)
+
+    #model_call()
+
+def profiling_original_schnetpack(report_dir: str):
+    from schnetpack.md.calculators import SchNetPackCalculator
+    from schnetpack.atomistic import Atomwise
+    from schnetpack.representation import SchNet
+    from schnetpack.ipu_modules import KNNNeighborTransform, PairwiseDistancesIPU, GaussianRBFIPU, DummyCutoff,\
+        ShiftedSoftplusIPU
+
+    os.environ["POPLAR_ENGINE_OPTIONS"] = '{"autoReport.all":"true", "autoReport.directory":"' + report_dir + '"}'
+
+    pred_energy = Atomwise(n_in=n_atom_basis, output_key=energy_key)
+
+    neighbor_distance = KNNNeighborTransform(n_neighbors, n_batches, n_atoms)
+
+    pairwise_distance = PairwiseDistancesIPU()
+
+    radial_basis = GaussianRBFIPU(n_rbf=n_rbf, cutoff=rbf_cutoff)
+
+    schnet = SchNet(
+         n_atom_basis=schnetpack_ipu_config["n_atom_basis"],
+         n_interactions=schnetpack_ipu_config["n_interactions"],
+         radial_basis=radial_basis,
+         max_z=schnetpack_ipu_config["max_z"],
+         cutoff_fn=DummyCutoff(schnetpack_ipu_config["rbf_cutoff"]),
+         activation=ShiftedSoftplusIPU(),
+         n_neighbors=schnetpack_ipu_config["n_neighbors"],
+    )
+#
+#    nnpot = spk.model.NeuralNetworkPotential(
+#        representation=schnet,
+#        input_modules=[trn.CastTo32(), neighbor_distance, pairwise_distance],
+#        output_modules=[pred_energy, pred_forces],
+#        postprocessors=[
+#            trn.CastTo64(),
+#        ]
+#    )
+#
+#    calc = SchNetPackCalculator(model_path,  # path to stored model
+#                "forces",  # force key
+#                "kcal/mol",  # energy units
+#                "Angstrom",  # length units
+#                md_neighborlist,  # neighbor list
+#                energy_key="energy",  # name of potential energies
+#                required_properties=[]  # additional properties extracted from the model)
+#
+#
 
 profiling(True, "./profiling/with_forces")
 profiling(False, "./profiling/without_forces")

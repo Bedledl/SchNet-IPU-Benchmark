@@ -41,18 +41,20 @@ class ShardedExecutionCalculator(BenchmarkCalculator):
         model.eval()
         model.to(torch.float32)
 
-        model.input_modules = torch.nn.ModuleList(
-            [
-                poptorch.BeginBlock(layer, ipu_id=0) for layer in model.input_modules
-            ]
-        )
         model.output_modules = torch.nn.ModuleList(
             [
                 poptorch.BeginBlock(layer, ipu_id=1) for layer in model.output_modules
             ]
         )
 
-        model.representation = poptorch.BeginBlock(model.representation, ipu_id=2)
+        output_module = []
+        for layer in model.output_modules:
+            if str(layer).startswith("Forces"):
+                layer = poptorch.BeginBlock(layer)
+
+            output_module.append(layer)
+
+        model.output_modules = torch.nn.ModuleList(output_module)
 
         opts = poptorch.Options()
         # Automatically create 3 shards based on the block names

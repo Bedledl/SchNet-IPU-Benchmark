@@ -138,7 +138,7 @@ def run_all_benchmarks():
         num_neighbors_cutoff = torch.tensor([len(nl.get_neighbors(i)[0]) - 1 for i in range(len(mol))],
                                             dtype=torch.float64)
         num_neighbors = regression_method(num_neighbors_cutoff)
-        num_neighbors = min(int(num_neighbors), 32)
+        num_neighbors = min(int(num_neighbors), BENCHMARK_CONFIGS["max_num_neighbors"] )
 
         # nl contains self-loop -> decrement num_neighbors
         schnetpack_model_config["n_neighbors"] = num_neighbors

@@ -51,13 +51,38 @@ def profiling(calculate_forces, report_dir: str):
         n_neighbors=schnetpack_ipu_config["n_neighbors"]
     )
 
-    calc.calculate(system)
+    calc.compile_model(system)
+    model_call = calc.get_model_call(system)
+    result = model_call()
+    print(result)
 
-    #calc.compile_model(system)
 
-    #model_call = calc.get_model_call(system)
+def profiling_sharded_model(calculate_forces, report_dir: str):
+    from test.sharded_execution_gradient import ShardedExecutionCalculator
+    from create_model import create_model
 
-    #model_call()
+    os.environ["POPLAR_ENGINE_OPTIONS"] = '{"autoReport.all":"true", "autoReport.directory":"' + report_dir + '"}'
+
+    schnetpack_ipu_config["calc_forces"] = calculate_forces
+
+    model = create_model(**schnetpack_ipu_config)
+
+    calc = ShardedExecutionCalculator(
+        model,
+        "forces",  # force key
+        "kcal/mol",  # energy units
+        "Angstrom",  # length units
+        energy_key="energy",  # name of potential energies
+        required_properties=[],  # additional properties extracted from the model
+        run_on_ipu=True,
+        n_neighbors=schnetpack_ipu_config["n_neighbors"]
+    )
+
+    calc.compile_model(system)
+    model_call = calc.get_model_call(system)
+    result = model_call()
+    print(result)
+
 
 def profiling_original_schnetpack(report_dir: str):
     from schnetpack.md.calculators import SchNetPackCalculator
@@ -105,5 +130,6 @@ def profiling_original_schnetpack(report_dir: str):
 #
 #
 
-profiling(True, "./profiling/with_forces")
-profiling(False, "./profiling/without_forces")
+#profiling(True, "./profiling/with_forces")
+#profiling(False, "./profiling/without_forces")
+profiling_sharded_model(True, "./profiling/sharded_with_forces")

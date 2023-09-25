@@ -90,7 +90,7 @@ def run_all_benchmarks():
             #remove KNN module
             new_input_modules = []
             for input_module in model.input_modules:
-                if input_module.startswith("KNNNeighborTransform"):
+                if str(input_module).startswith("KNNNeighborTransform"):
                     print("removed KNNNeighborTransform from input modules")
                     knn_module = input_module
                     continue
@@ -109,8 +109,6 @@ def run_all_benchmarks():
             n_neighbors=schnetpack_ipu_config["n_neighbors"]
         )
 
-        calc.compile_model(system)
-
         inputs = calc.get_inputs(system)
 
         if knn_on_ipu:
@@ -118,6 +116,7 @@ def run_all_benchmarks():
         else:
             model_call = lambda in_: calc.model(knn_module(in_))
 
+        model_call()
 
         try:
             speed = benchmark(model_call, pdb_file, inputs)

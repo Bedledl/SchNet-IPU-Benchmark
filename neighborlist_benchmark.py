@@ -132,8 +132,6 @@ def run_all_benchmarks():
             print(description)
             log_file.write(description)
 
-        break
-
     log_file.close()
 
 if __name__ == '__main__':

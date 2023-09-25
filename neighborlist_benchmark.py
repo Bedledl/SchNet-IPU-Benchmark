@@ -1,17 +1,15 @@
 import os
 from itertools import product
 from os.path import join
-from typing import Dict
 
 import torch
 from torch.utils.benchmark import Timer
-
-from create_model import create_model
 
 from ase.io.proteindatabank import read_proteindatabank
 from ase.neighborlist import build_neighbor_list
 
 from schnetpack.md import System
+import schnetpack.ipu_modules as schnet_ipu_modules
 from schnetpack.ipu_modules.Calculator import BenchmarkCalculator
 
 # we use the configs of model_2 from
@@ -58,7 +56,6 @@ def run_all_benchmarks():
     log_file = open("bechmark_result.log", "w")
 
     for system, knn_on_ipu in product(systems, [True, False]):
-        knn_module = None
         pdb_file, name = system
 
         mol = read_proteindatabank(pdb_file, index=0)
@@ -81,25 +78,15 @@ def run_all_benchmarks():
         schnetpack_ipu_config["n_neighbors"] = num_neighbors
         print(f"n_neighbors: {num_neighbors}")
 
-        schnetpack_ipu_config["calc_forces"] = False
-
-        model = create_model(**schnetpack_ipu_config)
-
-
-        if not knn_on_ipu:
-            #remove KNN module
-            new_input_modules = []
-            for input_module in model.input_modules:
-                if str(input_module).startswith("KNNNeighborTransform"):
-                    print("removed KNNNeighborTransform from input modules")
-                    knn_module = input_module
-                    continue
-                new_input_modules.append(input_module)
-            model.input_modules = torch.nn.ModuleList(new_input_modules)
-
+        knn_module = schnet_ipu_modules.KNNNeighborTransform(
+            schnetpack_ipu_config["n_neighbors"],
+            schnetpack_ipu_config["n_batches"],
+            schnetpack_ipu_config["n_atoms"],
+            always_update=True
+        )
 
         calc = BenchmarkCalculator(
-            model,
+            knn_module,
             "forces",  # force key
             "kcal/mol",  # energy units
             "Angstrom",  # length units
@@ -114,9 +101,9 @@ def run_all_benchmarks():
         if knn_on_ipu:
             model_call = calc.model
         else:
-            model_call = lambda in_: calc.model(knn_module(in_))
+            model_call = knn_module
 
-        model_call()
+        model_call(inputs)
 
         try:
             speed = benchmark(model_call, pdb_file, inputs)

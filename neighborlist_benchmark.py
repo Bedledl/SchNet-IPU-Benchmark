@@ -17,14 +17,9 @@ from schnetpack.ipu_modules.Calculator import BenchmarkCalculator
 
 
 schnetpack_ipu_config = {
-        "n_atom_basis": 128,
-        "n_rbf": 50,
-        "n_neighbors": 3,
+        "n_neighbors": 32,
         "n_atoms": None,
         "n_batches": 1,
-        "rbf_cutoff": 5.0,
-        "n_interactions": 3,
-        "max_z": 100,
 }
 max_num_neighbors = 32
 

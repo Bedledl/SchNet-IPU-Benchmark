@@ -20,6 +20,7 @@ schnetpack_ipu_config = {
         "n_neighbors": 32,
         "n_atoms": None,
         "n_batches": 1,
+        "rbf_cutoff": 5.0,
 }
 max_num_neighbors = 32
 

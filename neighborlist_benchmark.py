@@ -30,11 +30,11 @@ schnetpack_ipu_config = {
 }
 max_num_neighbors = 32
 
-def benchmark(model, pdb_file):
+def benchmark(model, pdb_file, inputs):
 
     # Benchmark
     stmt = f'''
-        energy = model()
+        energy = model(inputs)
         '''
     timer = Timer(stmt=stmt, globals=locals())
     speed = timer.blocked_autorange(min_run_time=10).median * 1000 # s --> ms

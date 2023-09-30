@@ -36,20 +36,20 @@ def benchmark(model, pdb_file, inputs):
     return speed
 
 def run_all_benchmarks():
-    torchmdnet_path = join(os.getenv('TORCHMD_NET'), "benchmarks/systems")
-    if not torchmdnet_path:
-        raise ValueError("Please set the environment variable 'TORCHMD_NET' to the root directory"
-                         " of a cloned version of the torchmd-net repository.")
+    pdb_path = os.getenv('PDB_FILES')
 
-    systems = [(join(torchmdnet_path, 'alanine_dipeptide.pdb'), 'ALA2'),
-               (join(torchmdnet_path, 'chignolin.pdb'), 'CLN'),
-               (join(torchmdnet_path, 'dhfr.pdb'), 'DHFR'),
-               (join(torchmdnet_path, 'factorIX.pdb'), 'FC9'),
-               (join(torchmdnet_path, 'stmv.pdb'), 'STMV')]
+    if not pdb_path:
+        raise ValueError("Please set the environment variable 'PDB_FILES' to the directory that contains the pdb files.")
+
+    systems = [(join(pdb_path, 'alanine_dipeptide.pdb'), 'ALA2'),
+               (join(pdb_path, 'ferritin.pdb'), 'FER'),
+               (join(pdb_path, 'profilin.pdb'), 'PRO'),
+               (join(pdb_path, 'villin.pdb'), 'VIL'),
+               (join(pdb_path, 'dhfr.pdb'), 'DHFR')]
 
     neighbors_method = torch.max
 
-    log_file = open("bechmark_result.log", "w")
+    log_file = open("benchmark_result.log", "w")
 
     for system, knn_on_ipu in product(systems, [True, False]):
         pdb_file, name = system
@@ -72,7 +72,7 @@ def run_all_benchmarks():
 
         # nl contains self-loop -> decrement num_neighbors
         schnetpack_ipu_config["n_neighbors"] = num_neighbors
-        print(f"n_neighbors: {num_neighbors}")
+        print(f"n_neighbors: {num_neighbors}, n_atoms: {system.n_atoms}")
 
         knn_module = schnet_ipu_modules.KNNNeighborTransform(
             schnetpack_ipu_config["n_neighbors"],
@@ -104,13 +104,13 @@ def run_all_benchmarks():
         try:
             speed = benchmark(model_call, pdb_file, inputs)
             description = f'  {name}: {speed} ms/it     KNN on IPU: {knn_on_ipu}' \
-                          f'      k: {num_neighbors}'
+                          f'      k: {num_neighbors}, num_atoms: {system.n_atoms}'
             print(description)
             log_file.write(description)
         except Exception as e:
             print(e)
             description = f'  {name}: failed     KNN on IPU: {knn_on_ipu}' \
-                          f'      k: {num_neighbors}'
+                          f'      k: {num_neighbors}, num_atoms: {system.n_atoms}'
             print(description)
             log_file.write(description)
 

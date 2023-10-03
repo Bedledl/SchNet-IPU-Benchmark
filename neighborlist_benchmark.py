@@ -93,6 +93,7 @@ def run_all_benchmarks():
         )
 
         inputs = calc.get_inputs(system)
+        inputs["_positions"] = inputs["_positions"].to(torch.float32)
 
         if knn_on_ipu:
             model_call = calc.model

@@ -36,7 +36,7 @@ def create_model(
         n_atom_basis=n_atom_basis, n_interactions=n_interactions,
         radial_basis=radial_basis,
         max_z=max_z,
-        cutoff_fn=schnet_ipu_modules.DummyCutoff(rbf_cutoff),
+        cutoff_fn=schnet_ipu_modules.CosineCutoff(rbf_cutoff),
         activation=schnet_ipu_modules.ShiftedSoftplusIPU(),
         n_neighbors=n_neighbors,
     )

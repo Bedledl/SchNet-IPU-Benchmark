@@ -41,11 +41,9 @@ class ShardedExecutionCalculator(BenchmarkCalculator):
         model.eval()
         model.to(torch.float32)
 
-        model.output_modules = torch.nn.ModuleList(
-            [
-                poptorch.BeginBlock(layer, ipu_id=1) for layer in model.output_modules
-            ]
-        )
+        opts = poptorch.Options()
+        # Automatically create 3 shards based on the block names
+        opts.setExecutionStrategy(poptorch.ShardedExecution(poptorch.AutoStage.AutoIncrement))
 
         output_module = []
         for layer in model.output_modules:
@@ -56,9 +54,12 @@ class ShardedExecutionCalculator(BenchmarkCalculator):
 
         model.output_modules = torch.nn.ModuleList(output_module)
 
-        opts = poptorch.Options()
-        # Automatically create 3 shards based on the block names
-        opts.setExecutionStrategy(poptorch.ShardedExecution(poptorch.AutoStage.AutoIncrement))
+#        interactions = []
+#        for interaction in model.representation.interactions:
+#            interaction = poptorch.BeginBlock(interaction)
+#            interactions.append(interaction)
+
+        model.representation.interactions = torch.nn.ModuleList(interactions)
 
         self.model = poptorch.inferenceModel(model, opts)
 

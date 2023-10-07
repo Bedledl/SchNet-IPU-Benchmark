@@ -1,3 +1,4 @@
+import poptorch
 import os
 from os.path import join
 
@@ -5,12 +6,11 @@ from ase.io.proteindatabank import read_proteindatabank
 
 from schnetpack.md import System
 
-torchmdnet_path = join(os.getenv('TORCHMD_NET'), "benchmarks/systems")
-if not torchmdnet_path:
-    raise ValueError("Please set the environment variable 'TORCHMD_NET' to the root directory"
-                     " of a cloned version of the torchmd-net repository.")
+PDB_FILES = os.getenv('PDB_FILES')
+if not PDB_FILES:
+    raise ValueError("Please set the environment variable 'PDB_FILES' to the directory containing the .pdb structures.")
 
-pdb_file = join(torchmdnet_path, 'dhfr.pdb')
+pdb_file = join(PDB_FILES, 'alanine_dipeptide.pdb')
 
 mol = read_proteindatabank(pdb_file, index=0)
 
@@ -89,7 +89,7 @@ def profiling_original_schnetpack(report_dir: str):
     from schnetpack.atomistic import Atomwise
     from schnetpack.representation import SchNet
     from schnetpack.ipu_modules import KNNNeighborTransform, PairwiseDistancesIPU, GaussianRBFIPU, DummyCutoff,\
-        ShiftedSoftplusIPU
+        ShiftedSoftplusIPU, Cutoff
 
     os.environ["POPLAR_ENGINE_OPTIONS"] = '{"autoReport.all":"true", "autoReport.directory":"' + report_dir + '"}'
 
@@ -106,7 +106,7 @@ def profiling_original_schnetpack(report_dir: str):
          n_interactions=schnetpack_ipu_config["n_interactions"],
          radial_basis=radial_basis,
          max_z=schnetpack_ipu_config["max_z"],
-         cutoff_fn=DummyCutoff(schnetpack_ipu_config["rbf_cutoff"]),
+         cutoff_fn=Cutoff(schnetpack_ipu_config["rbf_cutoff"]),
          activation=ShiftedSoftplusIPU(),
          n_neighbors=schnetpack_ipu_config["n_neighbors"],
     )
@@ -130,6 +130,7 @@ def profiling_original_schnetpack(report_dir: str):
 #
 #
 
-#profiling(True, "./profiling/with_forces")
+#profiling(True, "./profiling/can_be_deleted")
 #profiling(False, "./profiling/without_forces")
-profiling_sharded_model(True, "./profiling/sharded_with_forces")
+#profiling_sharded_model(True, "./profiling/individual_jacobian")
+profiling_parallel_phased_model(True, "./profiling_parallel_phased0")

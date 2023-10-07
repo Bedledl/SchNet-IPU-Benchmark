@@ -101,26 +101,29 @@ def benchmark(model, pdb_file):
         '''
     timer = Timer(stmt=stmt, globals=locals())
     speed = timer.blocked_autorange(min_run_time=10).median * 1000 # s --> ms
+    it_s = 1000/speed
 
-    return speed
+    return f"it/s: {it_s}, per run:{speed}"
 
 def run_all_benchmarks():
-    torchmdnet_path = join(os.getenv('TORCHMD_NET'), "benchmarks/systems")
-    if not torchmdnet_path:
+    PDB_FILES = os.getenv('PDB_FILES')
+    if not PDB_FILES:
         raise ValueError("Please set the environment variable 'TORCHMD_NET' to the root directory"
                          " of a cloned version of the torchmd-net repository.")
 
-    systems = [(join(torchmdnet_path, 'alanine_dipeptide.pdb'), 'ALA2'),
-               (join(torchmdnet_path, 'chignolin.pdb'), 'CLN'),
-               (join(torchmdnet_path, 'dhfr.pdb'), 'DHFR'),
-               (join(torchmdnet_path, 'factorIX.pdb'), 'FC9'),
-               (join(torchmdnet_path, 'stmv.pdb'), 'STMV')]
+    systems = [(join(PDB_FILES, 'alanine_dipeptide.pdb'), 'ALA2'),
+               (join(PDB_FILES, 'chignolin.pdb'), "CLN"),
+               (join(PDB_FILES, "villin.pdb"), "VIL"),
+               (join(PDB_FILES, "profilin.pdb"), "PRO"),
+               (join(PDB_FILES, "ferritin.pdb"), "FER"),
+               (join(PDB_FILES, "dhfr.pdb"), "DHFR"),
+               ]
 
-    neighbors_regression_method = [torch.mean, torch.max, torch.median]
+    neighbors_regression_method = [torch.max]#[torch.mean, torch.max, torch.median]
 
     log_file = open("bechmark_result.log", "w")
 
-    for system, calc_forces, regression_method in product(systems, [True, False], neighbors_regression_method):
+    for system, calc_forces, regression_method in product(systems, [False, True], neighbors_regression_method):
         pdb_file, name = system
 
         mol = read_proteindatabank(pdb_file, index=0)

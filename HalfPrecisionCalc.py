@@ -52,6 +52,4 @@ class HalfPrecisionCalculator(BenchmarkCalculator):
                 continue
             if val.dtype.is_floating_point:
                 inputs[key] = val.half()
-            else:
-                inputs[key] = val.short()
         return inputs

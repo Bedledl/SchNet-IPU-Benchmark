@@ -1,8 +1,6 @@
 import torch
 import poptorch
 
-from functools import partial
-
 from schnetpack.ipu_modules import BenchmarkCalculator
 from schnetpack.md import System
 from typing import Union, Dict, List
@@ -52,5 +50,8 @@ class HalfPrecisionCalculator(BenchmarkCalculator):
         for key, val in inputs.items():
             if not isinstance(val, torch.Tensor):
                 continue
-            inputs[key] = val.half()
+            if val.dtype.is_floating_point:
+                inputs[key] = val.half()
+            else:
+                inputs[key] = val.short()
         return inputs

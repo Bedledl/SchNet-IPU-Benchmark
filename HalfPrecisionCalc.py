@@ -7,7 +7,7 @@ from schnetpack.ipu_modules import BenchmarkCalculator
 from schnetpack.md import System
 from typing import Union, Dict, List
 
-class ShardedExecutionCalculator(BenchmarkCalculator):
+class HalfPrecisionCalculator(BenchmarkCalculator):
     """
     This calculator shards the SchNet Model
     """

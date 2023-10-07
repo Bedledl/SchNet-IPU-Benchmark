@@ -59,18 +59,6 @@ class ShardedExecutionCalculator(BenchmarkCalculator):
 #            interaction = poptorch.BeginBlock(interaction)
 #            interactions.append(interaction)
 
-        model.representation.interactions = torch.nn.ModuleList(interactions)
+#        model.representation.interactions = torch.nn.ModuleList(interactions)
 
         self.model = poptorch.inferenceModel(model, opts)
-
-    def get_inputs(self, system):
-        return self._get_system_molecules(system)
-
-    def get_model_call(self, system):
-        """This method returns a callable that runs the model and that can be used for a benchmark"""
-        inputs = self._get_system_molecules(system)
-        return partial(self.model, inputs)
-
-    def calculate(self, system: System):
-        inputs = self._get_system_molecules(system)
-        return self.model(inputs)

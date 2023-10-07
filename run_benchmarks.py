@@ -6,7 +6,7 @@ from typing import Dict
 import torch
 from torch.utils.benchmark import Timer
 
-import HalfPrecisionCalc
+from HalfPrecisionCalc import HalfPrecisionCalculator
 from create_model import create_model
 
 from ase.io.proteindatabank import read_proteindatabank
@@ -159,7 +159,7 @@ def run_all_benchmarks(optimization: str = ""):
         elif optimization == "sharded":
             calculator_cls = ShardedExecutionCalculator
         elif optimization == "half":
-            calculator_cls = HalfPrecisionCalc
+            calculator_cls = HalfPrecisionCalculator
         elif optimization == "YES":
             raise NotImplementedError("Not implemented yet, but this should combine all optimizations.")
 

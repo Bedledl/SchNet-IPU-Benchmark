@@ -1,4 +1,3 @@
-import poptorch
 import os
 from os.path import join
 
@@ -6,9 +5,12 @@ from ase.io.proteindatabank import read_proteindatabank
 
 from schnetpack.md import System
 
+from create_model import create_calculator, create_model
+
 PDB_FILES = os.getenv('PDB_FILES')
 if not PDB_FILES:
-    raise ValueError("Please set the environment variable 'PDB_FILES' to the directory containing the .pdb structures.")
+    print("The environment variable 'PDB_FILES' seems to be not set. Using default 'data/structures'.")
+    PDB_FILES = 'data/structures'
 
 pdb_file = join(PDB_FILES, 'alanine_dipeptide.pdb')
 
@@ -21,62 +23,23 @@ system.load_molecules([mol])
 schnetpack_ipu_config = {
         "n_atom_basis": 128,
         "n_rbf": 50,
-        "n_neighbors": 32,
+        "n_neighbors": 21,
         "n_atoms": system.n_atoms,
         "n_batches": 1,
         "rbf_cutoff": 5.0,
         "n_interactions": 6,
         "max_z": 100,
-    }
+}
 
 
-def profiling(calculate_forces, report_dir: str):
-    from schnetpack.ipu_modules.Calculator import BenchmarkCalculator
-    from create_model import create_model
+def profiling(calculate_forces, report_dir: str, optimization):
 
     os.environ["POPLAR_ENGINE_OPTIONS"] = '{"autoReport.all":"true", "autoReport.directory":"'+report_dir+'"}'
 
     schnetpack_ipu_config["calc_forces"] = calculate_forces
 
     model = create_model(**schnetpack_ipu_config)
-
-    calc = BenchmarkCalculator(
-        model,
-        "forces",  # force key
-        "kcal/mol",  # energy units
-        "Angstrom",  # length units
-        energy_key="energy",  # name of potential energies
-        required_properties=[],  # additional properties extracted from the model
-        run_on_ipu=True,
-        n_neighbors=schnetpack_ipu_config["n_neighbors"]
-    )
-
-    calc.compile_model(system)
-    model_call = calc.get_model_call(system)
-    result = model_call()
-    print(result)
-
-
-def profiling_sharded_model(calculate_forces, report_dir: str):
-    from test.sharded_execution_gradient import ShardedExecutionCalculator
-    from create_model import create_model
-
-    os.environ["POPLAR_ENGINE_OPTIONS"] = '{"autoReport.all":"true", "autoReport.directory":"' + report_dir + '"}'
-
-    schnetpack_ipu_config["calc_forces"] = calculate_forces
-
-    model = create_model(**schnetpack_ipu_config)
-
-    calc = ShardedExecutionCalculator(
-        model,
-        "forces",  # force key
-        "kcal/mol",  # energy units
-        "Angstrom",  # length units
-        energy_key="energy",  # name of potential energies
-        required_properties=[],  # additional properties extracted from the model
-        run_on_ipu=True,
-        n_neighbors=schnetpack_ipu_config["n_neighbors"]
-    )
+    calc = create_calculator(model, schnetpack_ipu_config["n_neighbors"], optimization)
 
     calc.compile_model(system)
     model_call = calc.get_model_call(system)
@@ -130,7 +93,6 @@ def profiling_original_schnetpack(report_dir: str):
 #
 #
 
-#profiling(True, "./profiling/can_be_deleted")
+profiling(True, "./profiling/with_checkpoints_ala")
 #profiling(False, "./profiling/without_forces")
-#profiling_sharded_model(True, "./profiling/individual_jacobian")
-profiling_parallel_phased_model(True, "./profiling_parallel_phased0")
+#profiling_sharded_model(True, "./profiling/sharded_without_checkpoints7_10")

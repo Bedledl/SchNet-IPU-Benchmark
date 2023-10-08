@@ -40,8 +40,26 @@ class HalfPrecisionCalculator(BenchmarkCalculator):
         model = model.half()
 
         opts = poptorch.Options()
-        # Automatically create 3 shards based on the block names
-        opts.Precision.enableStochasticRounding(True)
+        # add StochasticRounding
+        # currently leads to error:
+        #File
+        #"/opt/pytorch/lib/python3.8/site-packages/poptorch/_poplar_executor.py", line
+        #936, in _compileWithDispatch
+        #executable = poptorch_core.compileWithManualTracing(
+        #    poptorch.poptorch_core.Error: In
+        #unknown: 0: 'std::out_of_range': map::at
+        #Error
+        #raised in:
+        #[0]
+        #popart::InferenceSession::createFromOnnxModel
+        #[1]
+        #Compiler::initSession
+        #[2]
+        #LowerToPopart::compile
+        #[3]
+        #compileWithManualTracing
+        #
+        #opts.Precision.enableStochasticRounding(True)
 
         self.model = poptorch.inferenceModel(model, opts)
 

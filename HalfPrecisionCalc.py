@@ -37,7 +37,7 @@ class HalfPrecisionCalculator(BenchmarkCalculator):
             raise NotImplementedError("Sharded Execution is only available for IPU")
 
         model.eval()
-        model.half()
+        model = model.half()
 
         opts = poptorch.Options()
         # Automatically create 3 shards based on the block names

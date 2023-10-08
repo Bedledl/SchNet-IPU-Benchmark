@@ -6,16 +6,13 @@ from typing import Dict
 import torch
 from torch.utils.benchmark import Timer
 
-from HalfPrecisionCalc import HalfPrecisionCalculator
-from create_model import create_model
+from create_model import create_model, create_calculator
 
 from ase.io.proteindatabank import read_proteindatabank
 from ase.neighborlist import build_neighbor_list
 
 from schnetpack.md import System
-from schnetpack.ipu_modules.Calculator import BenchmarkCalculator
 
-from shardedExecutionCalc import ShardedExecutionCalculator
 
 # we use the configs of model_2 from
 # https://github.com/torchmd/torchmd-net/blob/main/benchmarks/graph_network.ipynb
@@ -153,27 +150,7 @@ def run_all_benchmarks(optimization: str = ""):
         schnetpack_model_config["calc_forces"] = calc_forces
 
         model = create_model(**schnetpack_model_config)
-
-        if optimization == "":
-            calculator_cls = BenchmarkCalculator
-        elif optimization == "sharded":
-            calculator_cls = ShardedExecutionCalculator
-        elif optimization == "half":
-            calculator_cls = HalfPrecisionCalculator
-        elif optimization == "YES":
-            raise NotImplementedError("Not implemented yet, but this should combine all optimizations.")
-
-
-        calc = calculator_cls(
-            model,
-            "forces",  # force key
-            "kcal/mol",  # energy units
-            "Angstrom",  # length units
-            energy_key="energy",  # name of potential energies
-            required_properties=[],  # additional properties extracted from the model
-            run_on_ipu=True,
-            n_neighbors=schnetpack_model_config["n_neighbors"]
-        )
+        calc = create_calculator(model, schnetpack_model_config["n_neighbors"], optimization)
 
         calc.compile_model(system)
 

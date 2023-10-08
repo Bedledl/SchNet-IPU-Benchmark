@@ -1,8 +1,12 @@
 import schnetpack as spk
 import schnetpack.transform as trn
 import schnetpack.ipu_modules as schnet_ipu_modules
+from schnetpack.ipu_modules.Calculator import BenchmarkCalculator
 
 from torch.nn import Identity
+
+from HalfPrecisionCalc import HalfPrecisionCalculator
+from shardedExecutionCalc import ShardedExecutionCalculator
 
 
 def create_model(
@@ -17,7 +21,7 @@ def create_model(
         constant_batch_size=True,
         calc_forces=True,
         energy_key="energy",
-        forces_key="forces"
+        forces_key="forces",
 ):
     pred_energy = spk.atomistic.Atomwise(n_in=n_atom_basis, output_key=energy_key)
     if calc_forces:
@@ -50,3 +54,27 @@ def create_model(
     )
 
     return nnpot
+
+
+def create_calculator(model, k, optimization):
+    if optimization == "":
+        calculator_cls = BenchmarkCalculator
+    elif optimization == "sharded":
+        calculator_cls = ShardedExecutionCalculator
+    elif optimization == "half":
+        calculator_cls = HalfPrecisionCalculator
+    elif optimization == "YES":
+        raise NotImplementedError("Not implemented yet, but this should combine all optimizations.")
+
+    calc = calculator_cls(
+        model,
+        "forces",  # force key
+        "kcal/mol",  # energy units
+        "Angstrom",  # length units
+        energy_key="energy",  # name of potential energies
+        required_properties=[],  # additional properties extracted from the model
+        run_on_ipu=True,
+        n_neighbors=k
+    )
+
+    return calc

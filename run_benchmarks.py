@@ -111,8 +111,8 @@ def benchmark(model, pdb_file):
 def run_all_benchmarks(optimization: str = ""):
     PDB_FILES = os.getenv('PDB_FILES')
     if not PDB_FILES:
-        raise ValueError("Please set the environment variable 'TORCHMD_NET' to the root directory"
-                         " of a cloned version of the torchmd-net repository.")
+        print("The environment variable 'PDB_FILES' seems to be not set. Using default 'data/structures'.")
+        PDB_FILES = 'data/structures'
 
     systems = [(join(PDB_FILES, 'alanine_dipeptide.pdb'), 'ALA2'),
                (join(PDB_FILES, 'chignolin.pdb'), "CLN"),

@@ -43,10 +43,9 @@ def create_model(
 
     nnpot = spk.model.NeuralNetworkPotential(
         representation=schnet,
-        input_modules=[trn.CastTo32(), neighbor_distance, pairwise_distance],
+        input_modules=[neighbor_distance, pairwise_distance],
         output_modules=[pred_energy, pred_forces],
         postprocessors=[
-            trn.CastTo64(),
         ]
     )
 

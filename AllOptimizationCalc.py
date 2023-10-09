@@ -1,11 +1,11 @@
 import torch
 import poptorch
 
-
 from schnetpack.ipu_modules import BenchmarkCalculator
+from schnetpack.md import System
 from typing import Union, Dict, List
 
-class ShardedExecutionCalculator(BenchmarkCalculator):
+class AllOptimizationsCalculator(BenchmarkCalculator):
     """
     This calculator shards the SchNet Model
     """
@@ -37,10 +37,9 @@ class ShardedExecutionCalculator(BenchmarkCalculator):
             raise NotImplementedError("Sharded Execution is only available for IPU")
 
         model.eval()
-        model.to(torch.float32)
+        model = model.half()
 
         opts = poptorch.Options()
-        # Automatically create 3 shards based on the block names
         opts.setExecutionStrategy(poptorch.ShardedExecution(poptorch.AutoStage.AutoIncrement))
 
         output_module = []
@@ -52,11 +51,14 @@ class ShardedExecutionCalculator(BenchmarkCalculator):
 
         model.output_modules = torch.nn.ModuleList(output_module)
 
-#        interactions = []
-#        for interaction in model.representation.interactions:
-#            interaction = poptorch.BeginBlock(interaction)
-#            interactions.append(interaction)
-
-#        model.representation.interactions = torch.nn.ModuleList(interactions)
-
         self.model = poptorch.inferenceModel(model, opts)
+
+    def _get_system_molecules(self, system: System):
+        inputs = super()._get_system_molecules(system)
+        for key, val in inputs.items():
+            if not isinstance(val, torch.Tensor):
+                continue
+            if val.dtype.is_floating_point:
+                inputs[key] = val.half()
+
+        return inputs

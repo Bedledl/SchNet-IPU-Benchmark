@@ -5,7 +5,7 @@ from schnetpack.ipu_modules.Calculator import BenchmarkCalculator
 
 from torch.nn import Identity
 
-import AllOptimizationCalc
+from AllOptimizationCalc import AllOptimizationCalculator
 from HalfPrecisionCalc import HalfPrecisionCalculator
 from shardedExecutionCalc import ShardedExecutionCalculator
 
@@ -65,7 +65,7 @@ def create_calculator(model, k, optimization):
     elif optimization == "half":
         calculator_cls = HalfPrecisionCalculator
     elif optimization == "YES":
-        calculator_cls = AllOptimizationCalc
+        calculator_cls = AllOptimizationCalculator
 
     calc = calculator_cls(
         model,

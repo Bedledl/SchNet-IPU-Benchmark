@@ -5,7 +5,7 @@ from schnetpack.ipu_modules import BenchmarkCalculator
 from schnetpack.md import System
 from typing import Union, Dict, List
 
-class AllOptimizationsCalculator(BenchmarkCalculator):
+class AllOptimizationCalculator(BenchmarkCalculator):
     """
     This calculator shards the SchNet Model
     """

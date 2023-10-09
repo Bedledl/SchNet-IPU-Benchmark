@@ -37,7 +37,6 @@ class AllOptimizationCalculator(BenchmarkCalculator):
             raise NotImplementedError("Sharded Execution is only available for IPU")
 
         model.eval()
-        model = model.half()
 
         opts = poptorch.Options()
         opts.setExecutionStrategy(poptorch.ShardedExecution(poptorch.AutoStage.AutoIncrement))
@@ -51,6 +50,7 @@ class AllOptimizationCalculator(BenchmarkCalculator):
 
         model.output_modules = torch.nn.ModuleList(output_module)
 
+        model = model.half()
         self.model = poptorch.inferenceModel(model, opts)
 
     def _get_system_molecules(self, system: System):

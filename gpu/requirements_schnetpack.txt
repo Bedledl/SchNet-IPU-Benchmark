@@ -1,0 +1,4 @@
+torch_geometric
+numpy==1.23.5
+schnetpack @ git+https://github.com/atomistic-machine-learning/schnetpack.git
+ase

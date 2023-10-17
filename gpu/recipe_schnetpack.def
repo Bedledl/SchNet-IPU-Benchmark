@@ -1,0 +1,20 @@
+Bootstrap: docker
+From: pytorch/pytorch:2.1.0-cuda12.1-cudnn8-runtime
+Stage: spython-base
+
+%files
+requirements_schnetpack.txt /opt/requirements.txt
+%post
+
+apt-get update && DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get -y install tzdata # this has t be done to prevent interactive tzdata dialog: https://serverfault.com/questions/949991/how-to-install-tzdata-on-a-ubuntu-docker-image
+apt-get update && apt-get install git wget gcc -y
+apt-get update && apt-get install vim -y
+
+pip3 install -r /opt/requirements.txt
+
+
+%runscript
+exec /bin/bash "$@"
+%startscript
+exec /bin/bash "$@"
+
